@@ -2,6 +2,8 @@ import pandas as pd
 import random
 import numpy as np
 
+
+
 class Ciudadano:
     def __init__(self, _id, nombre, apellido, comunidad):
         self._id = _id
@@ -24,10 +26,9 @@ class Ciudadano:
         apellido = np.random.choice(apellido)
         return nombre, apellido
 
+
 #crear ciudadano
     def crear_persona(_id_, comunidad):
         nombres = Ciudadano.obtener_nombre_aleatorio()
         ciudadano = Ciudadano(_id=_id_, comunidad=comunidad, nombre=nombres[0], apellido=nombres[1])
         return ciudadano
-
-#print(Ciudadano.crear_persona().comunidad)

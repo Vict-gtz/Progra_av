@@ -12,6 +12,8 @@ from enfermedad import Enfermedad
 from comunidad import Comunidad
 from simulador import Simulador
 
+
+
 class MainWindow(Gtk.ApplicationWindow):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -44,6 +46,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self.current_step = 0
         self.keep_updating = False # para parar el loop
 
+
     # Guarda resultados en csv
     def save_results_to_csv(self, results, i):
         data = []
@@ -59,19 +62,20 @@ class MainWindow(Gtk.ApplicationWindow):
         results_df.to_csv(f"simulacion_comunidad_{i+1}.csv", index=False)
         print(f"Resultados guardados en simulacion_comunidad_{i+1}.csv")
 
+
     # Info inicial y pasos
     def on_start_simulation(self, widget):
         self.comunidades = []
         for i in range(4):
-            enfermedad = Enfermedad(infeccion_probable=0.3, promedio_pasos=18)
-            comunidad = Comunidad(
+            enfermedad = Enfermedad(infeccion_probable=0.3, promedio_pasos=18) # Uso clase enfermedad
+            comunidad = Comunidad( # Uso clase comunidad
                 num_ciudadanos=random.randint(1200, 2000),
                 promedio_conexion_fisica=8,
                 enfermedad=enfermedad,
-                num_infectados=10,
+                num_infectados= 2,
                 probabilidad_conexion_fisica=0.8
             )
-            comunidad.personas_comunidad(i)####ppl
+            comunidad.personas_comunidad(i) # Personas en comunidad
             self.simuladores[i].set_comunidad(comunidad)
             self.simuladores[i].run(pasos=50)
             self.save_results_to_csv(self.simuladores[i].get_results(), i)
@@ -80,10 +84,12 @@ class MainWindow(Gtk.ApplicationWindow):
         self.read_csv_data()
         self.start_update_loop()
 
+
     def read_csv_data(self):
         for i in range(4):
             df = pd.read_csv(f"simulacion_comunidad_{i+1}.csv")
             self.csv_data[i] = df.to_dict('records')  # df a dic
+
 
     # Actualiza la info en la ventana
     def update_labels(self):
@@ -98,6 +104,7 @@ class MainWindow(Gtk.ApplicationWindow):
         else:
             self.keep_updating = False  # Detener el loop cuando ya se lean todos los datos
 
+
     # Tiempo que tarda en actualizarse
     def start_update_loop(self):
         self.keep_updating = True  
@@ -107,6 +114,8 @@ class MainWindow(Gtk.ApplicationWindow):
                 GLib.idle_add(self.update_labels)
 
         threading.Thread(target=update_loop, daemon=True).start()
+
+
 
 # Bases programa
 class MyApp(Gtk.Application):
