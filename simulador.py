@@ -10,7 +10,7 @@ class Simulador:
         for paso in range(pasos):
             self.comunidad.step()
             self.results[paso] = {
-                'infected': self.comunidad.infectados,
+                'infected': self.comunidad.num_infectados,
                 'recovered': self.comunidad.recuperados,
                 'dead': self.comunidad.muertos,
                 'population': self.comunidad.num_ciudadanos 
