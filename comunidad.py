@@ -1,5 +1,4 @@
 import random
-from ciudadano import Ciudadano
 
 class Comunidad:
     def __init__(self, num_ciudadanos, promedio_conexion_fisica, enfermedad, num_infectados, probabilidad_conexion_fisica):
@@ -7,23 +6,37 @@ class Comunidad:
         self.promedio_conexion_fisica = promedio_conexion_fisica
         self.enfermedad = enfermedad
         self.probabilidad_conexion_fisica = probabilidad_conexion_fisica
-        self.ciudadanos = self.crear_ciudadanos(num_ciudadanos)
-        self.infectar_ciudadanos(num_infectados)
-        self.num_infectados = num_infectados
-
-    def crear_ciudadanos(self, num):
-        ciudadanos = []
-        for i in range(num):
-            ciudadano = Ciudadano(i, f"Nombre_{i}", f"Apellido_{i}", self, f"Familia_{i // 4}")
-            ciudadanos.append(ciudadano)
-        return ciudadanos
-
-    def infectar_ciudadanos(self, num_infectados):
-        infectados = random.sample(self.ciudadanos, num_infectados)
-        for ciudadano in infectados:
-            ciudadano.infectar(self.enfermedad)
-
-    def actualizar_estado(self):
-        self.num_infectados = sum(1 for c in self.ciudadanos if c.enfermedad)
-        self.num_recuperados = sum(1 for c in self.ciudadanos if c.estado == 'recuperado')
-        self.num_muertos = sum(1 for c in self.ciudadanos if c.estado == 'muerto')
+        
+        self.susceptibles = num_ciudadanos - num_infectados
+        self.infectados = num_infectados
+        self.recuperados = 0
+        self.muertos = 0
+    
+    def step(self):
+        new_infectados = self.calcular_nuevos_infectados()
+        new_recuperados = self.calcular_nuevos_recuperados()
+        new_muertos = self.calcular_nuevos_muertos()
+        
+        self.susceptibles -= new_infectados
+        self.infectados += new_infectados - new_recuperados - new_muertos
+        self.recuperados += new_recuperados
+        self.muertos += new_muertos
+        self.num_ciudadanos -= new_muertos  
+        
+        if self.infectados < 0:
+            self.infectados = 0
+        if self.susceptibles < 0:
+            self.susceptibles = 0
+    
+    def calcular_nuevos_infectados(self):
+        nuevos_infectados = int(round((self.enfermedad.tasa_transmision * self.susceptibles * self.infectados) / self.num_ciudadanos))
+        return min(nuevos_infectados, self.susceptibles)
+    
+    def calcular_nuevos_recuperados(self):
+        nuevos_recuperados = int(round(self.enfermedad.tasa_recuperacion * self.infectados))
+        return min(nuevos_recuperados, self.infectados)
+    
+    def calcular_nuevos_muertos(self):
+        tasa_mortalidad = 0.02
+        nuevos_muertos = int(round(tasa_mortalidad * self.infectados))
+        return min(nuevos_muertos, self.infectados)

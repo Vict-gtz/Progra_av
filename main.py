@@ -1,3 +1,4 @@
+# main.py
 import gi
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gtk
@@ -12,6 +13,7 @@ class MainWindow(Gtk.ApplicationWindow):
         super().__init__(**kwargs)
         self.set_title("Simulador de Epidemia")
         self.set_default_size(800, 600)
+        
         self.vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         self.set_child(self.vbox)
 
@@ -34,7 +36,8 @@ class MainWindow(Gtk.ApplicationWindow):
                 'Días': step,
                 'Infectados': result['infected'],
                 'Recuperados': result['recovered'],
-                'Muertos': result['dead']
+                'Muertos': result['dead'],
+                'Población Total': result['population']  # Include total population in CSV
             })
         results_df = pd.DataFrame(data)
         results_df.to_csv("simulacion.csv", index=False)
@@ -50,9 +53,11 @@ class MainWindow(Gtk.ApplicationWindow):
 
     def show_results(self):
         self.save_results_to_csv(self.simulador.get_results())
-        buffer = self.text_view.get_buffer()
-        buffer.set_text("Simulación completada. Los resultados han sido guardados en resultados_simulacion.csv.")
 
+        buffer = self.text_view.get_buffer()
+        buffer.set_text("Simulación completada. Los resultados han sido guardados en simulacion.csv.")
+
+#bases programa
 class MyApp(Gtk.Application):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
