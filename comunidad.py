@@ -1,6 +1,8 @@
 #Imports
 import numpy as np
 import random
+import pandas as pd
+from ciudadano import Ciudadano
 
 class Comunidad:
     def __init__(self, num_ciudadanos, promedio_conexion_fisica, enfermedad, num_infectados, probabilidad_conexion_fisica):
@@ -10,9 +12,20 @@ class Comunidad:
         self.probabilidad_conexion_fisica = probabilidad_conexion_fisica
         self.num_infectados = num_infectados
         
-        self.susceptibles = num_ciudadanos - num_infectados #los que se pueden infectar
+        self.susceptibles = num_ciudadanos - num_infectados # Los que se pueden infectar
         self.recuperados = 0
         self.muertos = 0
+    
+    
+    def personas_comunidad(self):
+        comunidad = []
+        for i in range(self.num_ciudadanos):
+            persona = Ciudadano.crear_persona(i+2000000)
+            comunidad.append(persona.__dict__)  # Convertir a dic para df
+        comunidad_personas = persona.comunidad
+        results_df = pd.DataFrame(comunidad)
+        results_df.to_csv(f"ciudadanos_{comunidad_personas}.csv", index=False)
+        print(f"Personas de la comunidad fueron guardadas en ciudadanos_{comunidad_personas}.csv")
     
     def step(self):
         new_infectados = self.calcular_nuevos_infectados()
@@ -30,7 +43,7 @@ class Comunidad:
             self.susceptibles = 0
     
     
-    #SIR
+    #SIR #CAMBIARESTO"""""""""dsp
     def calcular_nuevos_infectados(self):
         posibles_infectados = self.num_infectados * self.promedio_conexion_fisica
         nuevas_infecciones = np.sum(np.random.rand(int(posibles_infectados)) < self.probabilidad_conexion_fisica)
@@ -44,3 +57,5 @@ class Comunidad:
         tasa_mortalidad = 0.02
         nuevos_muertos = int(round(tasa_mortalidad * self.num_infectados))
         return min(nuevos_muertos, self.num_infectados)
+
+

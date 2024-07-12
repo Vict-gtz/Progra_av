@@ -8,7 +8,7 @@ class Ciudadano:
         self.nombre = nombre
         self.apellido = apellido
         self.familia = familia # identificador (apellido)
-        self.comunidad = comunidad
+        self.comunidad = f"comunidad {comunidad}"
         self.enfermedad = False # no enfermo
         self.estado = True # vivo
 
@@ -25,7 +25,9 @@ class Ciudadano:
         return nombre, apellido
 
 #crear ciudadano
-nombres = Ciudadano.obtener_nombre_aleatorio()
-ciudadano = Ciudadano(_id=1, comunidad="Comunidad1", nombre=nombres[0], apellido=nombres[1], familia=nombres[1])
+    def crear_persona(_id_):
+        nombres = Ciudadano.obtener_nombre_aleatorio()
+        ciudadano = Ciudadano(_id=_id_, comunidad=1, nombre=nombres[0], apellido=nombres[1], familia=nombres[1])
+        return ciudadano
 
-print(f"Ciudadano creado: {ciudadano.nombre} {ciudadano.apellido}")
+#print(Ciudadano.crear_persona().comunidad)

@@ -12,7 +12,6 @@ from enfermedad import Enfermedad
 from comunidad import Comunidad
 from simulador import Simulador
 
-#Ventana
 class MainWindow(Gtk.ApplicationWindow):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -26,7 +25,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self.button_start.connect("clicked", self.on_start_simulation)
         self.vbox.append(self.button_start)
 
-        #Labels de las 4 comunidades
+        # Labels de las 4 comunidades
         self.community_labels = []
         for _ in range(4):
             label = Gtk.Label()
@@ -43,9 +42,9 @@ class MainWindow(Gtk.ApplicationWindow):
             data = [] 
             self.csv_data.append(data)
         self.current_step = 0
-        self.keep_updating = False #para parar el loop
+        self.keep_updating = False # para parar el loop
 
-    #Guarda resultados en csv
+    # Guarda resultados en csv
     def save_results_to_csv(self, results, i):
         data = []
         for step, result in results.items():
@@ -60,8 +59,7 @@ class MainWindow(Gtk.ApplicationWindow):
         results_df.to_csv(f"simulacion_comunidad_{i+1}.csv", index=False)
         print(f"Resultados guardados en simulacion_comunidad_{i+1}.csv")
 
-
-    #info inicial y pasos
+    # Info inicial y pasos
     def on_start_simulation(self, widget):
         self.comunidades = []
         for i in range(4):
@@ -73,6 +71,7 @@ class MainWindow(Gtk.ApplicationWindow):
                 num_infectados=10,
                 probabilidad_conexion_fisica=0.8
             )
+            comunidad.personas_comunidad()####perosnas
             self.simuladores[i].set_comunidad(comunidad)
             self.simuladores[i].run(pasos=50)
             self.save_results_to_csv(self.simuladores[i].get_results(), i)
@@ -84,10 +83,9 @@ class MainWindow(Gtk.ApplicationWindow):
     def read_csv_data(self):
         for i in range(4):
             df = pd.read_csv(f"simulacion_comunidad_{i+1}.csv")
-            self.csv_data[i] = df.to_dict('records') # df a dic
+            self.csv_data[i] = df.to_dict('records')  # df a dic
 
-
-    #Actualiza la info en la ventana
+    # Actualiza la info en la ventana
     def update_labels(self):
         if self.current_step < len(self.csv_data[0]):
             for i, label in enumerate(self.community_labels):
@@ -100,7 +98,7 @@ class MainWindow(Gtk.ApplicationWindow):
         else:
             self.keep_updating = False  # Detener el loop cuando ya se lean todos los datos
 
-    #Tiempo que tarda en actualizarse
+    # Tiempo que tarda en actualizarse
     def start_update_loop(self):
         self.keep_updating = True  
         def update_loop():
@@ -110,7 +108,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
         threading.Thread(target=update_loop, daemon=True).start()
 
-#bases programa
+# Bases programa
 class MyApp(Gtk.Application):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
