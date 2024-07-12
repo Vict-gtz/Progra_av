@@ -1,11 +1,15 @@
+import random
+from ciudadano import Ciudadano
+
 class Comunidad:
-    def _init_(self, num_ciudadanos, promedio_conexion_fisica, enfermedad, num_infectados, probabilidad_conexion_fisica):
+    def __init__(self, num_ciudadanos, promedio_conexion_fisica, enfermedad, num_infectados, probabilidad_conexion_fisica):
         self.num_ciudadanos = num_ciudadanos
         self.promedio_conexion_fisica = promedio_conexion_fisica
         self.enfermedad = enfermedad
         self.probabilidad_conexion_fisica = probabilidad_conexion_fisica
         self.ciudadanos = self.crear_ciudadanos(num_ciudadanos)
         self.infectar_ciudadanos(num_infectados)
+        self.num_infectados = num_infectados
 
     def crear_ciudadanos(self, num):
         ciudadanos = []
@@ -18,3 +22,8 @@ class Comunidad:
         infectados = random.sample(self.ciudadanos, num_infectados)
         for ciudadano in infectados:
             ciudadano.infectar(self.enfermedad)
+
+    def actualizar_estado(self):
+        self.num_infectados = sum(1 for c in self.ciudadanos if c.enfermedad)
+        self.num_recuperados = sum(1 for c in self.ciudadanos if c.estado == 'recuperado')
+        self.num_muertos = sum(1 for c in self.ciudadanos if c.estado == 'muerto')
