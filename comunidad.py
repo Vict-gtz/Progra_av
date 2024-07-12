@@ -3,6 +3,7 @@ import numpy as np
 import random
 import pandas as pd
 from ciudadano import Ciudadano
+from enfermedad import Enfermedad
 
 class Comunidad:
     def __init__(self, num_ciudadanos, promedio_conexion_fisica, enfermedad, num_infectados, probabilidad_conexion_fisica):
@@ -43,10 +44,12 @@ class Comunidad:
             self.susceptibles = 0
     
     
-    #SIR #CAMBIARESTO"""""""""dsp
+    #SIR 
     def calcular_nuevos_infectados(self):
-        posibles_infectados = self.num_infectados * self.promedio_conexion_fisica
-        nuevas_infecciones = np.sum(np.random.rand(int(posibles_infectados)) < self.probabilidad_conexion_fisica)
+        t_s_i = (self.enfermedad.infeccion_probable * self.susceptibles * self.num_infectados)
+        rec_inf = (self.enfermedad.tasa_recuperacion * self.num_infectados)
+        posibles_infectados = max(int(round(t_s_i - rec_inf)), 0)
+        nuevas_infecciones = (np.sum(np.random.rand(int(posibles_infectados)) < self.probabilidad_conexion_fisica))
         return min(nuevas_infecciones, self.susceptibles)
     
     def calcular_nuevos_recuperados(self):
