@@ -21,7 +21,7 @@ class Comunidad:
         self.infectados += new_infectados - new_recuperados - new_muertos
         self.recuperados += new_recuperados
         self.muertos += new_muertos
-        self.num_ciudadanos -= new_muertos 
+        self.num_ciudadanos -= new_muertos  # Update the total population
         
         if self.infectados < 0:
             self.infectados = 0
@@ -29,7 +29,12 @@ class Comunidad:
             self.susceptibles = 0
     
     def calcular_nuevos_infectados(self):
-        nuevos_infectados = int(round((self.enfermedad.tasa_transmision * self.susceptibles * self.infectados) / self.num_ciudadanos))
+        nuevos_infectados = 0
+        for _ in range(self.infectados):
+            for _ in range(int(self.promedio_conexion_fisica)):
+                if random.random() < self.probabilidad_conexion_fisica:
+                    if random.random() < self.enfermedad.tasa_transmision:
+                        nuevos_infectados += 1
         return min(nuevos_infectados, self.susceptibles)
     
     def calcular_nuevos_recuperados(self):

@@ -1,14 +1,14 @@
-# main.py
 import gi
 import time
 import threading
+import pandas as pd
+import sys
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gtk, GLib
 from enfermedad import Enfermedad
 from comunidad import Comunidad
 from simulador import Simulador
-import sys
-import pandas as pd
+
 
 class MainWindow(Gtk.ApplicationWindow):
     def __init__(self, **kwargs):
@@ -26,13 +26,15 @@ class MainWindow(Gtk.ApplicationWindow):
         self.button_start.connect("clicked", self.on_start_simulation)
         self.vbox.append(self.button_start)
 
-        self.community_text_views = []
+        self.community_labels = []
         for i in range(4):
-            text_view = Gtk.TextView()
-            self.vbox.append(text_view)
-            self.community_text_views.append(text_view)
+            label = Gtk.Label()
+            self.vbox.append(label)
+            self.community_labels.append(label)
 
         self.simuladores = [Simulador() for _ in range(4)]
+        self.csv_data = [[] for _ in range(4)]
+        self.current_step = 0
 
     def save_results_to_csv(self, results, index):
         data = []
@@ -57,26 +59,33 @@ class MainWindow(Gtk.ApplicationWindow):
             self.simuladores[i].run(pasos=45)
             self.save_results_to_csv(self.simuladores[i].get_results(), i)
             self.comunidades.append(comunidad)
-
-        self.update_text_views()
+        
+        self.read_csv_data()
         self.start_update_loop()
 
-    def update_text_views(self):
-        for i, text_view in enumerate(self.community_text_views):
-            buffer = text_view.get_buffer()
-            comunidad = self.comunidades[i]
-            text = f"Comunidad {i+1} - Población: {comunidad.num_ciudadanos}, Infectados: {comunidad.infectados}, Recuperados: {comunidad.recuperados}, Muertos: {comunidad.muertos}"
-            buffer.set_text(text)
+    def read_csv_data(self):
+        for i in range(4):
+            df = pd.read_csv(f"simulacion_comunidad_{i+1}.csv")
+            self.csv_data[i] = df.to_dict('records')
+
+    def update_labels(self):
+        if self.current_step < len(self.csv_data[0]):
+            for i, label in enumerate(self.community_labels):
+                data = self.csv_data[i][self.current_step]
+                text = f"Comunidad {i+1} - Día: {data['Días']}, Infectados: {data['Infectados']}, Recuperados: {data['Recuperados']}, Muertos: {data['Muertos']}, Población Total: {data['Población Total']}"
+                label.set_text(text)
+            self.current_step += 1
+        else:
+            self.current_step = 0
 
     def start_update_loop(self):
         def update_loop():
             while True:
                 time.sleep(1)
-                GLib.idle_add(self.update_text_views)
+                GLib.idle_add(self.update_labels)
 
         threading.Thread(target=update_loop, daemon=True).start()
 
-# Base del programa
 class MyApp(Gtk.Application):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
