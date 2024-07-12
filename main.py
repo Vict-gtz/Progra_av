@@ -3,24 +3,21 @@ import time
 import threading
 import pandas as pd
 import sys
+import random
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gtk, GLib
 from enfermedad import Enfermedad
 from comunidad import Comunidad
 from simulador import Simulador
 
-
 class MainWindow(Gtk.ApplicationWindow):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.set_title("Simulador de Epidemia")
-        self.set_default_size(800, 600)
+        self.set_title("Simulador SIR")
+        self.set_default_size(800, 400)
         
         self.vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         self.set_child(self.vbox)
-
-        self.label = Gtk.Label(label="Configuración de la Simulación")
-        self.vbox.append(self.label)
 
         self.button_start = Gtk.Button(label="Iniciar Simulación")
         self.button_start.connect("clicked", self.on_start_simulation)
@@ -32,11 +29,21 @@ class MainWindow(Gtk.ApplicationWindow):
             self.vbox.append(label)
             self.community_labels.append(label)
 
-        self.simuladores = [Simulador() for _ in range(4)]
-        self.csv_data = [[] for _ in range(4)]
-        self.current_step = 0
+        self.simuladores = []
+        for i in range(4):
+            simulador = Simulador()
+            self.simuladores.append(simulador)
+            print(f"Simulador {i+1} creado: {simulador}")
 
-    def save_results_to_csv(self, results, index):
+        self.csv_data = []
+        for i in range(4):
+            data_list = []
+            self.csv_data.append(data_list)
+            print(f"Lista de datos CSV {i+1} creada: {data_list}")
+        self.current_step = 0
+        self.keep_updating = False
+
+    def save_results_to_csv(self, results, i):
         data = []
         for step, result in results.items():
             data.append({
@@ -47,14 +54,14 @@ class MainWindow(Gtk.ApplicationWindow):
                 'Población Total': result['population']
             })
         results_df = pd.DataFrame(data)
-        results_df.to_csv(f"simulacion_comunidad_{index+1}.csv", index=False)
-        print(f"Resultados guardados en simulacion_comunidad_{index+1}.csv")
+        results_df.to_csv(f"simulacion_comunidad_{i+1}.csv", index=False)
+        print(f"Resultados guardados en simulacion_comunidad_{i+1}.csv")
 
     def on_start_simulation(self, widget):
         self.comunidades = []
         for i in range(4):
-            covid = Enfermedad(infeccion_probable=0.3, promedio_pasos=18)
-            comunidad = Comunidad(num_ciudadanos=20000, promedio_conexion_fisica=8, enfermedad=covid, num_infectados=10, probabilidad_conexion_fisica=0.8)
+            enfermedad = Enfermedad(infeccion_probable=0.3, promedio_pasos=18)
+            comunidad = Comunidad(num_ciudadanos=random.randint(12000, 20000), promedio_conexion_fisica=8, enfermedad=enfermedad, num_infectados=10, probabilidad_conexion_fisica=0.8)
             self.simuladores[i].set_comunidad(comunidad)
             self.simuladores[i].run(pasos=45)
             self.save_results_to_csv(self.simuladores[i].get_results(), i)
@@ -76,11 +83,12 @@ class MainWindow(Gtk.ApplicationWindow):
                 label.set_text(text)
             self.current_step += 1
         else:
-            self.current_step = 0
+            self.keep_updating = False  # Detener el loop de actualización cuando se hayan leído todos los datos
 
     def start_update_loop(self):
+        self.keep_updating = True  # Iniciar el loop de actualización
         def update_loop():
-            while True:
+            while self.keep_updating:
                 time.sleep(1)
                 GLib.idle_add(self.update_labels)
 

@@ -21,7 +21,7 @@ class Comunidad:
         self.infectados += new_infectados - new_recuperados - new_muertos
         self.recuperados += new_recuperados
         self.muertos += new_muertos
-        self.num_ciudadanos -= new_muertos  # Update the total population
+        self.num_ciudadanos -= new_muertos 
         
         if self.infectados < 0:
             self.infectados = 0
