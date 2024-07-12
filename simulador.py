@@ -13,7 +13,7 @@ class Simulador:
                 'infected': self.comunidad.infectados,
                 'recovered': self.comunidad.recuperados,
                 'dead': self.comunidad.muertos,
-                'population': self.comunidad.num_ciudadanos  # Include total population
+                'population': self.comunidad.num_ciudadanos 
             }
 
     def get_results(self):

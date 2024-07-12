@@ -1,7 +1,9 @@
 # main.py
 import gi
+import time
+import threading
 gi.require_version("Gtk", "4.0")
-from gi.repository import Gtk
+from gi.repository import Gtk, GLib
 from enfermedad import Enfermedad
 from comunidad import Comunidad
 from simulador import Simulador
@@ -24,12 +26,15 @@ class MainWindow(Gtk.ApplicationWindow):
         self.button_start.connect("clicked", self.on_start_simulation)
         self.vbox.append(self.button_start)
 
-        self.text_view = Gtk.TextView()
-        self.vbox.append(self.text_view)
+        self.community_text_views = []
+        for i in range(4):
+            text_view = Gtk.TextView()
+            self.vbox.append(text_view)
+            self.community_text_views.append(text_view)
 
-        self.simulador = Simulador()
+        self.simuladores = [Simulador() for _ in range(4)]
 
-    def save_results_to_csv(self, results):
+    def save_results_to_csv(self, results, index):
         data = []
         for step, result in results.items():
             data.append({
@@ -37,27 +42,41 @@ class MainWindow(Gtk.ApplicationWindow):
                 'Infectados': result['infected'],
                 'Recuperados': result['recovered'],
                 'Muertos': result['dead'],
-                'Población Total': result['population']  # Include total population in CSV
+                'Población Total': result['population']
             })
         results_df = pd.DataFrame(data)
-        results_df.to_csv("simulacion.csv", index=False)
-        print("Resultados guardados en simulacion.csv")
+        results_df.to_csv(f"simulacion_comunidad_{index+1}.csv", index=False)
+        print(f"Resultados guardados en simulacion_comunidad_{index+1}.csv")
 
     def on_start_simulation(self, widget):
-        covid = Enfermedad(infeccion_probable=0.3, promedio_pasos=18)
-        talca = Comunidad(num_ciudadanos=20000, promedio_conexion_fisica=8, enfermedad=covid, num_infectados=10, probabilidad_conexion_fisica=0.8)
-        self.simulador.set_comunidad(talca)
-        self.simulador.run(pasos=45)
-        
-        self.show_results()
+        self.comunidades = []
+        for i in range(4):
+            covid = Enfermedad(infeccion_probable=0.3, promedio_pasos=18)
+            comunidad = Comunidad(num_ciudadanos=20000, promedio_conexion_fisica=8, enfermedad=covid, num_infectados=10, probabilidad_conexion_fisica=0.8)
+            self.simuladores[i].set_comunidad(comunidad)
+            self.simuladores[i].run(pasos=45)
+            self.save_results_to_csv(self.simuladores[i].get_results(), i)
+            self.comunidades.append(comunidad)
 
-    def show_results(self):
-        self.save_results_to_csv(self.simulador.get_results())
+        self.update_text_views()
+        self.start_update_loop()
 
-        buffer = self.text_view.get_buffer()
-        buffer.set_text("Simulación completada. Los resultados han sido guardados en simulacion.csv.")
+    def update_text_views(self):
+        for i, text_view in enumerate(self.community_text_views):
+            buffer = text_view.get_buffer()
+            comunidad = self.comunidades[i]
+            text = f"Comunidad {i+1} - Población: {comunidad.num_ciudadanos}, Infectados: {comunidad.infectados}, Recuperados: {comunidad.recuperados}, Muertos: {comunidad.muertos}"
+            buffer.set_text(text)
 
-#bases programa
+    def start_update_loop(self):
+        def update_loop():
+            while True:
+                time.sleep(1)
+                GLib.idle_add(self.update_text_views)
+
+        threading.Thread(target=update_loop, daemon=True).start()
+
+# Base del programa
 class MyApp(Gtk.Application):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
