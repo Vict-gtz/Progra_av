@@ -17,15 +17,15 @@ class Comunidad:
         self.muertos = 0
     
     
-    def personas_comunidad(self):
+    def personas_comunidad(self, miaucomunidad):
         comunidad = []
         for i in range(self.num_ciudadanos):
-            persona = Ciudadano.crear_persona(i+2000000)
+            persona = Ciudadano.crear_persona(i+2000000, miaucomunidad+1)
             comunidad.append(persona.__dict__)  # Convertir a dic para df
         comunidad_personas = persona.comunidad
         results_df = pd.DataFrame(comunidad)
-        results_df.to_csv(f"ciudadanos_{comunidad_personas}.csv", index=False)
-        print(f"Personas de la comunidad fueron guardadas en ciudadanos_{comunidad_personas}.csv")
+        results_df.to_csv(f"ciudadanos_{persona.comunidad}.csv", index=False)
+        print(f"Personas de la comunidad fueron guardadas en ciudadanos_{persona.comunidad}.csv")
     
     def step(self):
         new_infectados = self.calcular_nuevos_infectados()
@@ -57,5 +57,4 @@ class Comunidad:
         tasa_mortalidad = 0.02
         nuevos_muertos = int(round(tasa_mortalidad * self.num_infectados))
         return min(nuevos_muertos, self.num_infectados)
-
 

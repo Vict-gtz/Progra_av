@@ -65,13 +65,13 @@ class MainWindow(Gtk.ApplicationWindow):
         for i in range(4):
             enfermedad = Enfermedad(infeccion_probable=0.3, promedio_pasos=18)
             comunidad = Comunidad(
-                num_ciudadanos=random.randint(12000, 20000),
+                num_ciudadanos=random.randint(1200, 2000),
                 promedio_conexion_fisica=8,
                 enfermedad=enfermedad,
                 num_infectados=10,
                 probabilidad_conexion_fisica=0.8
             )
-            comunidad.personas_comunidad()####perosnas
+            comunidad.personas_comunidad(i)####ppl
             self.simuladores[i].set_comunidad(comunidad)
             self.simuladores[i].run(pasos=50)
             self.save_results_to_csv(self.simuladores[i].get_results(), i)
