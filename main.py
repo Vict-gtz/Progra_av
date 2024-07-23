@@ -29,18 +29,18 @@ class MainWindow(Gtk.ApplicationWindow):
 
         # Labels de las 4 comunidades
         self.community_labels = []
-        for _ in range(4):
+        for _ in range(3):
             label = Gtk.Label()
             self.vbox.append(label)
             self.community_labels.append(label)
 
         self.simuladores = []
-        for _ in range(4):
+        for _ in range(3):
             simulador = Simulador()
             self.simuladores.append(simulador)
             
         self.csv_data = []
-        for _ in range(4):
+        for _ in range(3):
             data = [] 
             self.csv_data.append(data)
         self.current_step = 0
@@ -66,13 +66,13 @@ class MainWindow(Gtk.ApplicationWindow):
     # Info inicial y pasos
     def on_start_simulation(self, widget):
         self.comunidades = []
-        for i in range(4):
+        for i in range(3):
             enfermedad = Enfermedad(infeccion_probable=0.3, promedio_pasos=18) # Uso clase enfermedad
             comunidad = Comunidad( # Uso clase comunidad
                 num_ciudadanos=random.randint(1200, 2000),
                 promedio_conexion_fisica=8,
                 enfermedad=enfermedad,
-                num_infectados= 2,
+                num_infectados= random.randint(60, 230),
                 probabilidad_conexion_fisica=0.8
             )
             comunidad.personas_comunidad(i) # Personas en comunidad
@@ -86,7 +86,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
 
     def read_csv_data(self):
-        for i in range(4):
+        for i in range(3):
             df = pd.read_csv(f"simulacion_comunidad_{i+1}.csv")
             self.csv_data[i] = df.to_dict('records')  # df a dic
 
