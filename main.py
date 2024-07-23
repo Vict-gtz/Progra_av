@@ -12,14 +12,12 @@ from enfermedad import Enfermedad
 from comunidad import Comunidad
 from simulador import Simulador
 
-
-
 class MainWindow(Gtk.ApplicationWindow):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.set_title("Simulador SIR")
-        self.set_default_size(800, 400)
-        
+        self.set_default_size(800, 600)
+
         self.vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         self.set_child(self.vbox)
 
@@ -27,28 +25,16 @@ class MainWindow(Gtk.ApplicationWindow):
         self.button_start.connect("clicked", self.on_start_simulation)
         self.vbox.append(self.button_start)
 
-        # Labels de las 4 comunidades
-        self.community_labels = []
-        for _ in range(3):
-            label = Gtk.Label()
-            self.vbox.append(label)
-            self.community_labels.append(label)
+        # Label para mostrar el DataFrame de ciudadanos
+        self.df_label = Gtk.Label()
+        self.vbox.append(self.df_label)
 
-        self.simuladores = []
-        for _ in range(3):
-            simulador = Simulador()
-            self.simuladores.append(simulador)
-            
+        self.simulador = Simulador()
         self.csv_data = []
-        for _ in range(3):
-            data = [] 
-            self.csv_data.append(data)
-        self.current_step = 0
         self.keep_updating = False # para parar el loop
 
-
     # Guarda resultados en csv
-    def save_results_to_csv(self, results, i):
+    def save_results_to_csv(self, results):
         data = []
         for step, result in results.items():
             data.append({
@@ -59,63 +45,58 @@ class MainWindow(Gtk.ApplicationWindow):
                 'Población Total': result['population']
             })
         results_df = pd.DataFrame(data)
-        results_df.to_csv(f"simulacion_comunidad_{i+1}.csv", index=False)
-        print(f"Resultados guardados en simulacion_comunidad_{i+1}.csv")
-
+        results_df.to_csv("simulacion_comunidad.csv", index=False)
+        print(f"Resultados guardados en simulacion_comunidad.csv")
 
     # Info inicial y pasos
     def on_start_simulation(self, widget):
-        self.comunidades = []
-        for i in range(3):
-            enfermedad = Enfermedad(infeccion_probable=0.3, promedio_pasos=18) # Uso clase enfermedad
-            comunidad = Comunidad( # Uso clase comunidad
-                num_ciudadanos=random.randint(1200, 2000),
-                promedio_conexion_fisica=8,
-                enfermedad=enfermedad,
-                num_infectados= random.randint(60, 230),
-                probabilidad_conexion_fisica=0.8
-            )
-            comunidad.personas_comunidad(i) # Personas en comunidad
-            self.simuladores[i].set_comunidad(comunidad)
-            self.simuladores[i].run(pasos=50)
-            self.save_results_to_csv(self.simuladores[i].get_results(), i)
-            self.comunidades.append(comunidad)
+        enfermedad = Enfermedad(infeccion_probable=0.3, promedio_pasos=18) # Uso clase enfermedad
+        comunidad = Comunidad( # Uso clase comunidad
+            num_ciudadanos=random.randint(1200, 2000),
+            promedio_conexion_fisica=8,
+            enfermedad=enfermedad,
+            num_infectados=random.randint(60, 230),
+            probabilidad_conexion_fisica=0.8
+        )
+        comunidad.personas_comunidad() # Personas en comunidad
+        self.simulador.set_comunidad(comunidad)
+        self.simulador.run(pasos=50)
+        self.save_results_to_csv(self.simulador.get_results())
         
         self.read_csv_data()
+        self.update_dataframe_display()
         self.start_update_loop()
 
-
     def read_csv_data(self):
-        for i in range(3):
-            df = pd.read_csv(f"simulacion_comunidad_{i+1}.csv")
-            self.csv_data[i] = df.to_dict('records')  # df a dic
+        df = pd.read_csv("simulacion_comunidad.csv")
+        self.csv_data = df.to_dict('records')  # df a dic
 
+    def update_dataframe_display(self):
+        df_personas = pd.read_csv("ciudadanos_comunidad.csv")
+        self.df_label.set_text(df_personas.to_string())
 
     # Actualiza la info en la ventana
     def update_labels(self):
-        if self.current_step < len(self.csv_data[0]):
-            for i, label in enumerate(self.community_labels):
-                data = self.csv_data[i][self.current_step]
-                text = (f"Comunidad {i+1} - Día: {data['Días']}, Infectados: {data['Infectados']}, "
-                        f"Recuperados: {data['Recuperados']}, Muertos: {data['Muertos']}, "
-                        f"Población Total: {data['Población Total']}")
-                label.set_text(text)
+        if self.csv_data:
+            data = self.csv_data[self.current_step]
+            text = (f"Día: {data['Días']}, Infectados: {data['Infectados']}, "
+                    f"Recuperados: {data['Recuperados']}, Muertos: {data['Muertos']}, "
+                    f"Población Total: {data['Población Total']}")
+            self.df_label.set_text(text)
             self.current_step += 1
         else:
             self.keep_updating = False  # Detener el loop cuando ya se lean todos los datos
 
-
     # Tiempo que tarda en actualizarse
     def start_update_loop(self):
-        self.keep_updating = True  
+        self.current_step = 0
+        self.keep_updating = True
         def update_loop():
             while self.keep_updating:
                 time.sleep(1)
                 GLib.idle_add(self.update_labels)
 
         threading.Thread(target=update_loop, daemon=True).start()
-
-
 
 # Bases programa
 class MyApp(Gtk.Application):

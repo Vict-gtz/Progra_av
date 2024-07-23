@@ -15,15 +15,18 @@ class Comunidad:
         self.susceptibles = num_ciudadanos - num_infectados
         self.recuperados = 0
         self.muertos = 0
-    
-    def personas_comunidad(self, comunidad_num):
+        self.poblacion = []
+
+    def personas_comunidad(self):
         comunidad = []
         
         for i in range(self.num_ciudadanos):
-            persona = Ciudadano.crear_persona(i+2000000, comunidad_num+1)
+            persona = Ciudadano.crear_persona(i+2000000, 1)
             comunidad.append(persona.__dict__)
             
-        comunidad_personas = f"comunidad_{comunidad_num + 1}"
+        self.poblacion = comunidad
+        
+        comunidad_personas = "comunidad_1"
         results_df = pd.DataFrame(comunidad)
         results_df = self.dataframe_info(results_df, self.num_infectados)
         self.csv_crear(results_df, comunidad_personas)
@@ -35,25 +38,41 @@ class Comunidad:
         # Marcar los ciudadanos seleccionados como infectados
         results_df['enfermedad'] = False
         results_df.loc[indices_infectados, 'enfermedad'] = True
-        
+
+        # Agrupación por familia
+        results_df['familia'] = results_df['apellido']
+        grouped_df = results_df.groupby('familia')
+
+        for nombre_familia, grupo in grouped_df:
+            if grupo['enfermedad'].any():
+                for index, row in grupo.iterrows():
+                    if row['enfermedad']:
+                        # Infectar a otros miembros de la misma familia
+                        if np.random.rand() < self.enfermedad.infeccion_probable:
+                            results_df.at[index, 'enfermedad'] = True
         return results_df
-    
+
     def csv_crear(self, results_df, comunidad_personas):
-        results_df.to_csv(f"ciudadanos_{comunidad_personas}.csv", index=False)
-        print(f"Personas de la comunidad fueron guardadas en ciudadanos_{comunidad_personas}.csv")
+        results_df.to_csv("ciudadanos_comunidad.csv", index=False)
+        print(f"Personas de la comunidad fueron guardadas en ciudadanos_comunidad.csv")
     
     def step(self):
         new_infectados = self.calcular_nuevos_infectados()
         new_recuperados = self.calcular_nuevos_recuperados()
         new_muertos = self.calcular_nuevos_muertos()
         
-        self.susceptibles -= new_infectados
+        # Actualiza las cifras de infectados, recuperados y muertos
         self.num_infectados += new_infectados - new_recuperados - new_muertos
         self.recuperados += new_recuperados
         self.muertos += new_muertos
         
-        if self.num_infectados < 0:
-            self.num_infectados = 0
+        # Asegúrate de no tener valores negativos
+        self.num_infectados = max(self.num_infectados, 0)
+        self.recuperados = max(self.recuperados, 0)
+        self.muertos = max(self.muertos, 0)
+        
+        self.susceptibles = self.num_ciudadanos - self.num_infectados - self.recuperados - self.muertos
+
         if self.susceptibles < 0:
             self.susceptibles = 0
     

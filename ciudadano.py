@@ -1,8 +1,5 @@
 import pandas as pd
-import random
 import numpy as np
-
-
 
 class Ciudadano:
     def __init__(self, _id, nombre, apellido, comunidad):
@@ -11,10 +8,10 @@ class Ciudadano:
         self.apellido = apellido
         self.familia = apellido
         self.comunidad = f"comunidad {comunidad}"
-        self.enfermedad = False # no enfermo ####que cambie esto dsp
+        self.enfermedad = False # no enfermo
         self.estado = True # vivo
-
     
+    @staticmethod
     def obtener_nombre_aleatorio():
         file = 'nombres.csv'
         df = pd.read_csv(file, header=None, names=['nombres'])
@@ -26,8 +23,7 @@ class Ciudadano:
         apellido = np.random.choice(apellido)
         return nombre, apellido
 
-
-#crear ciudadano
+    @staticmethod
     def crear_persona(_id_, comunidad):
         nombres = Ciudadano.obtener_nombre_aleatorio()
         ciudadano = Ciudadano(_id=_id_, comunidad=comunidad, nombre=nombres[0], apellido=nombres[1])
