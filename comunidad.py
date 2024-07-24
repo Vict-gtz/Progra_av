@@ -10,7 +10,7 @@ class Comunidad:
         self.promedio_conexion_fisica = promedio_conexion_fisica
         self.enfermedad = enfermedad
         self.probabilidad_conexion_fisica = probabilidad_conexion_fisica
-        self.num_infectados = num_infectados#########CAMBIAMUCHO
+        self.num_infectados = num_infectados
 
         self.susceptibles = num_ciudadanos - num_infectados
         self.recuperados = 0
@@ -57,7 +57,6 @@ class Comunidad:
                 if np.random.rand() < self.enfermedad.prob_familiar * len(infectados_familia) / len(grupo):
                     self.results_df.at[idx, 'enfermedad'] = True
 
-
     def update_infectados_por_comunidad(self, results_df):
         infectados_comunidad = results_df[results_df['enfermedad'] == True].index.tolist()
         no_infectados_comunidad = results_df[results_df['enfermedad'] == False].index.tolist()
@@ -66,8 +65,6 @@ class Comunidad:
             # Revisar el contagio con la probabilidad de contagio comunitario
             if np.random.rand() < self.enfermedad.prob_comunidad * len(infectados_comunidad) / len(results_df):
                 results_df.at[idx, 'enfermedad'] = True
-
-
 
     def csv_crear(self, results_df):
         results_df.drop(columns=['comunidad'], inplace=True)
@@ -101,20 +98,16 @@ class Comunidad:
 
         if self.susceptibles < 0:
             self.susceptibles = 0
-    
+
     def calcular_nuevos_infectados(self):
-        t_s_i = (self.enfermedad.infeccion_probable * self.susceptibles * self.num_infectados)
-        rec_inf = (self.enfermedad.tasa_recuperacion * self.num_infectados)
-        posibles_infectados = max(int(round(t_s_i - rec_inf)), 0)
-        
-        nuevas_infecciones = (np.sum(np.random.rand(int(posibles_infectados)) < self.probabilidad_conexion_fisica))
-        return min(nuevas_infecciones, self.susceptibles)
-    
+        nuevos_infectados = (self.enfermedad.infeccion_probable * self.num_infectados * self.susceptibles) / self.num_ciudadanos
+        return int(nuevos_infectados)
+
     def calcular_nuevos_recuperados(self):
-        nuevos_recuperados = int(round(self.enfermedad.tasa_recuperacion * self.num_infectados))
+        nuevos_recuperados = int(self.enfermedad.tasa_recuperacion * self.num_infectados)
         return min(nuevos_recuperados, self.num_infectados)
-    
+
     def calcular_nuevos_muertos(self):
         tasa_mortalidad = 0.02
-        nuevos_muertos = int(round(tasa_mortalidad * self.num_infectados))
+        nuevos_muertos = int(tasa_mortalidad * self.num_infectados)
         return min(nuevos_muertos, self.num_infectados)
