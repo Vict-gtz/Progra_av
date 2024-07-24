@@ -15,6 +15,7 @@ class Simulador:
                 'dead': self.comunidad.muertos,
                 'population': (self.comunidad.num_ciudadanos - self.comunidad.muertos)
             }
+        self.comunidad.csv_crear(self.comunidad.get_dataframe())
 
     def get_results(self):
         return self.results

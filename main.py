@@ -51,7 +51,7 @@ class MainWindow(Gtk.ApplicationWindow):
         print(f"Resultados guardados en simulacion_comunidad.csv")
 
     def on_start_simulation(self, widget):
-        enfermedad = Enfermedad(infeccion_probable=0.3, promedio_pasos=4)
+        enfermedad = Enfermedad(infeccion_probable=0.3, promedio_pasos=4, prob_familiar=0.5, prob_comunidad=0.1)
         comunidad = Comunidad(
             num_ciudadanos=random.randint(1200, 2000),
             promedio_conexion_fisica=8,
