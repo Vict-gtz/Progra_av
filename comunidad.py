@@ -50,18 +50,61 @@ class Comunidad:
             infectados_familia = grupo[grupo['enfermedad'] == True].index.tolist()
             no_infectados_familia = grupo[grupo['enfermedad'] == False].index.tolist()
 
+            if not infectados_familia:
+                continue  # Si no hay infectados en la familia, no hay contagio
+
+            probabilidad_familiar = self.enfermedad.prob_familiar
+
             for idx in no_infectados_familia:
-                # Revisar el contagio con la probabilidad de contagio familiar, ver esto dsp
-                if np.random.rand() < self.enfermedad.prob_familiar * len(infectados_familia) / len(grupo):
+                # Revisar el contagio con la probabilidad de contagio familiar
+                if np.random.rand() < probabilidad_familiar:
                     self.results_df.at[idx, 'enfermedad'] = True
 
-    def update_infectados_por_comunidad(self, results_df):
-        infectados_comunidad = results_df[results_df['enfermedad'] == True].index.tolist()
-        no_infectados_comunidad = results_df[results_df['enfermedad'] == False].index.tolist()
 
-        for idx in no_infectados_comunidad:
-            if np.random.rand() < self.enfermedad.prob_comunidad * len(infectados_comunidad) / len(results_df):
-                results_df.at[idx, 'enfermedad'] = True
+    def update_infectados_por_comunidad(self, results_df):
+        # Obtenemos el número total de infectados
+        infectados_comunidad = results_df[results_df['enfermedad'] == True].index.tolist()
+        
+        # Obtenemos el número total de no infectados
+        no_infectados_comunidad = results_df[results_df['enfermedad'] == False].index.tolist()
+        
+        # Contamos el número de nuevos infectados por familia
+        num_nuevos_infectados_familia = self.results_df['enfermedad'].sum()
+        
+        # Calculamos el número de nuevos infectados en la comunidad (total deseado)
+        nuevos_infectados_totales = self.calcular_nuevos_infectados()
+        
+        # Calculamos cuántos infectados faltan después de considerar los infectados en familia
+        nuevos_infectados_restantes = nuevos_infectados_totales - num_nuevos_infectados_familia
+        
+        # Si no hay suficientes personas para infectar, ajustamos el número
+        if nuevos_infectados_restantes <= 0:
+            return
+        
+        # Si no hay suficientes personas no infectadas, usamos todas las disponibles
+        if len(no_infectados_comunidad) < nuevos_infectados_restantes:
+            nuevos_infectados_restantes = len(no_infectados_comunidad)
+        
+        # Elegimos aleatoriamente entre los no infectados restantes
+        indices_a_infectar = np.random.choice(no_infectados_comunidad, size=nuevos_infectados_restantes, replace=False)
+        
+        # Actualizamos el DataFrame
+        self.results_df.loc[indices_a_infectar, 'enfermedad'] = True
+
+                
+    def actualizar_infectados(self, nuevos_infectados):
+        # Filtra el DataFrame para obtener solo aquellos que no están infectados
+        no_infectados_df = self.results_df[self.results_df['enfermedad'] == False]
+        
+        # Si no hay suficientes personas no infectadas, usa todas las disponibles
+        if len(no_infectados_df) < nuevos_infectados:
+            nuevos_infectados = len(no_infectados_df)
+        
+        # Selecciona aleatoriamente los nuevos infectados
+        indices_a_infectar = np.random.choice(no_infectados_df.index, size=nuevos_infectados, replace=False)
+        
+        # Actualiza el DataFrame
+        self.results_df.loc[indices_a_infectar, 'enfermedad'] = True
 
     def csv_crear(self, results_df):
         results_df.drop(columns=['comunidad'], inplace=True)
@@ -79,19 +122,15 @@ class Comunidad:
         return results_df
     
     def step(self):
-        new_infectados = self.calcular_nuevos_infectados()
-        new_recuperados = self.calcular_nuevos_recuperados()
+        nuevos_infectados = self.calcular_nuevos_infectados()
+        nuevos_recuperados = self.calcular_nuevos_recuperados()
         
-        self.num_infectados += new_infectados - new_recuperados
-        self.recuperados += new_recuperados
+        self.actualizar_infectados(nuevos_infectados)
         
-        self.num_infectados = max(self.num_infectados, 0)
-        self.recuperados = max(self.recuperados, 0)
-        
-        self.susceptibles = self.num_ciudadanos - self.num_infectados - self.recuperados
+        self.num_infectados += nuevos_infectados - nuevos_recuperados
+        self.recuperados += nuevos_recuperados
+        self.susceptibles = max(self.num_ciudadanos - self.num_infectados - self.recuperados, 0)
 
-        if self.susceptibles < 0:
-            self.susceptibles = 0
 
     def calcular_nuevos_infectados(self):
         nuevos_infectados = (self.enfermedad.infeccion_probable * self.num_infectados * self.susceptibles) / self.num_ciudadanos
