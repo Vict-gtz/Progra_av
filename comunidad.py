@@ -19,18 +19,18 @@ class Comunidad:
 
     def personas_comunidad(self):
         comunidad = []
-        
         for i in range(self.num_ciudadanos):
-            persona = Ciudadano.crear_persona(i+2000000, 1)
+            persona = Ciudadano.crear_persona(i + 2000000, 1)
             comunidad.append(persona.__dict__)
-            
+
         self.poblacion = comunidad
-        
-        comunidad_personas = "comunidad_1"
+
+        comunidad_personas = "comunidad_1"#matar esto dsp
         results_df = pd.DataFrame(comunidad)
         results_df = self.dataframe_info(results_df, self.num_infectados)
         self.csv_crear(results_df, comunidad_personas)
-    
+        self.poblacion_df = results_df 
+
     def dataframe_info(self, results_df, num_infectados):
         # Seleccionar aleatoriamente a los infectados
         indices_infectados = np.random.choice(results_df.index, size=num_infectados, replace=False)
@@ -55,6 +55,16 @@ class Comunidad:
     def csv_crear(self, results_df, comunidad_personas):
         results_df.to_csv("ciudadanos_comunidad.csv", index=False)
         print(f"Personas de la comunidad fueron guardadas en ciudadanos_comunidad.csv")
+
+    def get_dataframe(self):
+        comunidad = []
+        for i in range(self.num_ciudadanos):
+            persona = Ciudadano.crear_persona(i + 2000000, 1)
+            comunidad.append(persona.__dict__)
+        
+        results_df = pd.DataFrame(comunidad)
+        results_df = self.dataframe_info(results_df, self.num_infectados)
+        return results_df
     
     def step(self):
         new_infectados = self.calcular_nuevos_infectados()
