@@ -6,6 +6,7 @@ from enfermedad import Enfermedad
 
 class Comunidad:
     def __init__(self, num_ciudadanos, promedio_conexion_fisica, enfermedad, num_infectados, probabilidad_conexion_fisica):
+        # Inicio de los parámetros de la comunidad
         self.num_ciudadanos = num_ciudadanos
         self.promedio_conexion_fisica = promedio_conexion_fisica
         self.enfermedad = enfermedad
@@ -19,6 +20,7 @@ class Comunidad:
         self.results_df = pd.DataFrame()
 
     def personas_comunidad(self):
+        # Crear y almacenar información de la población
         comunidad = []
         for i in range(self.num_ciudadanos):
             persona = Ciudadano.crear_persona(i + 2000000, 1)
@@ -31,11 +33,12 @@ class Comunidad:
         self.poblacion_df = self.results_df 
 
     def dataframe_info(self, results_df, num_infectados):
+        # Inicializar el estado de enfermedad de cada persona
         indices_infectados = np.random.choice(results_df.index, size=num_infectados, replace=False)
-        
         results_df['enfermedad'] = False
         results_df.loc[indices_infectados, 'enfermedad'] = True
 
+        # Asignar familias basadas en el apellido
         results_df['familia'] = results_df['apellido']
         grouped_df = results_df.groupby('familia')
 
@@ -46,6 +49,7 @@ class Comunidad:
         return results_df
 
     def update_infectados_por_familia(self, grouped_df):
+        # Actualizar infecciones basadas en contagio familiar
         for nombre_familia, grupo in grouped_df:
             infectados_familia = grupo[grupo['enfermedad'] == True].index.tolist()
             no_infectados_familia = grupo[grupo['enfermedad'] == False].index.tolist()
@@ -59,7 +63,6 @@ class Comunidad:
                 # Revisar el contagio con la probabilidad de contagio familiar
                 if np.random.rand() < probabilidad_familiar:
                     self.results_df.at[idx, 'enfermedad'] = True
-
 
     def update_infectados_por_comunidad(self, results_df):
         # Obtenemos el número total de infectados
@@ -91,7 +94,6 @@ class Comunidad:
         # Actualizamos el DataFrame
         self.results_df.loc[indices_a_infectar, 'enfermedad'] = True
 
-                
     def actualizar_infectados(self, nuevos_infectados):
         # Filtra el DataFrame para obtener solo aquellos que no están infectados
         no_infectados_df = self.results_df[self.results_df['enfermedad'] == False]
@@ -107,11 +109,13 @@ class Comunidad:
         self.results_df.loc[indices_a_infectar, 'enfermedad'] = True
 
     def csv_crear(self, results_df):
+        # Crear un archivo CSV con los datos de la comunidad
         results_df.drop(columns=['comunidad'], inplace=True)
         results_df.to_csv("ciudadanos_comunidad.csv", index=False)
         print(f"Personas de la comunidad fueron guardadas en ciudadanos_comunidad.csv")
 
     def get_dataframe(self):
+        # Obtener el DataFrame de la comunidad
         comunidad = []
         for i in range(self.num_ciudadanos):
             persona = Ciudadano.crear_persona(i + 2000000, 1)
@@ -120,8 +124,9 @@ class Comunidad:
         results_df = pd.DataFrame(comunidad)
         results_df = self.dataframe_info(results_df, self.num_infectados)
         return results_df
-    
+
     def step(self):
+        # Actualizar el estado de la comunidad en cada paso del tiempo
         nuevos_infectados = self.calcular_nuevos_infectados()
         nuevos_recuperados = self.calcular_nuevos_recuperados()
         
@@ -131,11 +136,12 @@ class Comunidad:
         self.recuperados += nuevos_recuperados
         self.susceptibles = max(self.num_ciudadanos - self.num_infectados - self.recuperados, 0)
 
-
     def calcular_nuevos_infectados(self):
+        # Calcular el número de nuevos infectados basado en la probabilidad de infección
         nuevos_infectados = (self.enfermedad.infeccion_probable * self.num_infectados * self.susceptibles) / self.num_ciudadanos
         return int(nuevos_infectados)
 
     def calcular_nuevos_recuperados(self):
+        # Calcular el número de nuevos recuperados basado en la tasa de recuperación
         nuevos_recuperados = int(self.enfermedad.tasa_recuperacion * self.num_infectados)
         return min(nuevos_recuperados, self.num_infectados)
