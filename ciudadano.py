@@ -9,8 +9,7 @@ class Ciudadano:
         self.familia = apellido
         self.comunidad = f"comunidad {comunidad}"
         self.enfermedad = False # no enfermo
-        self.estado = True # vivo
-    
+
     @staticmethod
     def obtener_nombre_aleatorio():
         file = 'nombres.csv'

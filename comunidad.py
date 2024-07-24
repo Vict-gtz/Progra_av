@@ -16,8 +16,6 @@ class Comunidad:
         self.recuperados = 0
         self.muertos = 0
         self.poblacion = []
-
-        # DataFrame para el estado de salud de la población
         self.results_df = pd.DataFrame()
 
     def personas_comunidad(self):
@@ -53,7 +51,7 @@ class Comunidad:
             no_infectados_familia = grupo[grupo['enfermedad'] == False].index.tolist()
 
             for idx in no_infectados_familia:
-                # Revisar el contagio con la probabilidad de contagio familiar
+                # Revisar el contagio con la probabilidad de contagio familiar, ver esto dsp
                 if np.random.rand() < self.enfermedad.prob_familiar * len(infectados_familia) / len(grupo):
                     self.results_df.at[idx, 'enfermedad'] = True
 
@@ -62,7 +60,6 @@ class Comunidad:
         no_infectados_comunidad = results_df[results_df['enfermedad'] == False].index.tolist()
 
         for idx in no_infectados_comunidad:
-            # Revisar el contagio con la probabilidad de contagio comunitario
             if np.random.rand() < self.enfermedad.prob_comunidad * len(infectados_comunidad) / len(results_df):
                 results_df.at[idx, 'enfermedad'] = True
 
@@ -84,17 +81,14 @@ class Comunidad:
     def step(self):
         new_infectados = self.calcular_nuevos_infectados()
         new_recuperados = self.calcular_nuevos_recuperados()
-        new_muertos = self.calcular_nuevos_muertos()
         
-        self.num_infectados += new_infectados - new_recuperados - new_muertos
+        self.num_infectados += new_infectados - new_recuperados
         self.recuperados += new_recuperados
-        self.muertos += new_muertos
         
         self.num_infectados = max(self.num_infectados, 0)
         self.recuperados = max(self.recuperados, 0)
-        self.muertos = max(self.muertos, 0)
         
-        self.susceptibles = self.num_ciudadanos - self.num_infectados - self.recuperados - self.muertos
+        self.susceptibles = self.num_ciudadanos - self.num_infectados - self.recuperados
 
         if self.susceptibles < 0:
             self.susceptibles = 0
@@ -106,8 +100,3 @@ class Comunidad:
     def calcular_nuevos_recuperados(self):
         nuevos_recuperados = int(self.enfermedad.tasa_recuperacion * self.num_infectados)
         return min(nuevos_recuperados, self.num_infectados)
-
-    def calcular_nuevos_muertos(self):
-        tasa_mortalidad = 0.02
-        nuevos_muertos = int(tasa_mortalidad * self.num_infectados)
-        return min(nuevos_muertos, self.num_infectados)

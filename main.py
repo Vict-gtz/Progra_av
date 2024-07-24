@@ -43,12 +43,13 @@ class MainWindow(Gtk.ApplicationWindow):
                 'Días': step,
                 'Infectados': result['infected'],
                 'Recuperados': result['recovered'],
-                'Muertos': result['dead'],
                 'Población Total': result['population']
             })
         results_df = pd.DataFrame(data)
         results_df.to_csv("simulacion_comunidad.csv", index=False)
         print(f"Resultados guardados en simulacion_comunidad.csv")
+
+
 
     def on_start_simulation(self, widget):
         enfermedad = Enfermedad(infeccion_probable=0.3, promedio_pasos=4, prob_familiar=0.5, prob_comunidad=0.1)
@@ -77,13 +78,14 @@ class MainWindow(Gtk.ApplicationWindow):
         if self.current_step < len(self.csv_data):
             data = self.csv_data[self.current_step]
             info_text = (f"Día: {data['Días']}, Infectados: {data['Infectados']}, "
-                         f"Recuperados: {data['Recuperados']}, Muertos: {data['Muertos']}, "
-                         f"Población Total: {data['Población Total']}")
+                        f"Recuperados: {data['Recuperados']}, "
+                        f"Población Total: {data['Población Total']}")
             self.info_label.set_text(info_text)
             self.display_dataframe(self.df_personas)
             self.current_step += 1
         else:
             self.keep_updating = False  # Detener el loop cuando ya se lean todos los datos
+
 
     def start_update_loop(self):
         self.current_step = 0
